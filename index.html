@@ -8,17 +8,17 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet-src.js"></script>
 <style>
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:#1a1a2e; height:100vh; display:flex; flex-direction:column; }
-  header { background:#12121f; border-bottom:1px solid #2a2a3e; padding:12px 20px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:#f0f2f5; height:100vh; display:flex; flex-direction:column; }
+  header { background:#fff; border-bottom:1px solid #e0e0e0; padding:12px 20px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
   .header-left { display:flex; align-items:center; gap:12px; }
   .logo { width:32px; height:32px; background:linear-gradient(135deg,#875A7B,#6B4668); border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px; }
-  header h1 { font-size:16px; font-weight:600; color:#e0e0f0; }
-  header p { font-size:12px; color:#7070a0; margin-top:1px; }
-  #stats-bar { display:flex; background:#12121f; border-bottom:1px solid #2a2a3e; flex-shrink:0; }
-  .stat { flex:1; padding:8px 16px; text-align:center; border-right:1px solid #2a2a3e; }
+  header h1 { font-size:16px; font-weight:600; color:#1a1a2e; }
+  header p { font-size:12px; color:#888; margin-top:1px; }
+  #stats-bar { display:flex; background:#fff; border-bottom:1px solid #e0e0e0; flex-shrink:0; }
+  .stat { flex:1; padding:8px 16px; text-align:center; border-right:1px solid #e0e0e0; }
   .stat:last-child { border-right:none; }
   .stat-val { font-size:20px; font-weight:700; color:#875A7B; line-height:1.2; }
-  .stat-lbl { font-size:11px; color:#7070a0; text-transform:uppercase; letter-spacing:0.4px; }
+  .stat-lbl { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.4px; }
   #map { flex:1; min-height:0; }
   #loading { position:fixed; inset:0; background:rgba(255,255,255,0.92); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:9999; gap:16px; }
   .spinner { width:40px; height:40px; border:3px solid #e0d0e8; border-top-color:#875A7B; border-radius:50%; animation:spin 0.8s linear infinite; }
@@ -33,9 +33,10 @@
   .popup-header { background:#875A7B; color:#fff; padding:10px 14px; font-size:13px; font-weight:600; }
   .popup-body { padding:10px 14px; }
   .popup-row { display:flex; gap:8px; align-items:flex-start; font-size:12px; color:#444; margin-top:5px; }
+  .popup-row:first-child { margin-top:0; }
   .popup-icon { color:#875A7B; flex-shrink:0; width:14px; margin-top:1px; }
   .popup-link { display:inline-block; margin-top:8px; font-size:12px; color:#875A7B; text-decoration:underline; }
-  footer { background:#12121f; border-top:1px solid #2a2a3e; padding:6px 20px; font-size:11px; color:#5050708; text-align:center; flex-shrink:0; }
+  footer { background:#fff; border-top:1px solid #e0e0e0; padding:6px 20px; font-size:11px; color:#aaa; text-align:center; flex-shrink:0; }
 </style>
 </head>
 <body>
@@ -65,7 +66,7 @@
 </div>
 
 <div id="map"></div>
-<footer>Kaartdata: OpenStreetMap · Geocoding: Nominatim · Data: Odoo CRM ComTIS Energy</footer>
+<footer>Kaartdata: OpenStreetMap · CartoDB Positron · Geocoding: Nominatim · Data: Odoo CRM ComTIS Energy</footer>
 
 <script>
 const PROXY   = 'https://odoo-proxy.bartgentens.workers.dev';
@@ -82,7 +83,6 @@ function hideLoading() { document.getElementById('loading').style.display='none'
 function showError(m) { const e=document.getElementById('error-box'); e.textContent=m; e.style.display='block'; setTimeout(()=>e.style.display='none',12000); }
 function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
 
-// XML-RPC via Cloudflare Worker
 async function xmlrpc(path, methodName, params) {
   const body = xmlEncode(methodName, params);
   const resp = await fetch(PROXY + path, {
@@ -95,86 +95,72 @@ async function xmlrpc(path, methodName, params) {
 }
 
 function xmlEncode(method, params) {
-  const encodeVal = v => {
+  const enc = v => {
     if (v === null || v === false) return '<value><boolean>0</boolean></value>';
     if (v === true) return '<value><boolean>1</boolean></value>';
     if (typeof v === 'number' && Number.isInteger(v)) return `<value><int>${v}</int></value>`;
     if (typeof v === 'number') return `<value><double>${v}</double></value>`;
     if (typeof v === 'string') return `<value><string>${v.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</string></value>`;
-    if (Array.isArray(v)) return `<value><array><data>${v.map(encodeVal).join('')}</data></array></value>`;
+    if (Array.isArray(v)) return `<value><array><data>${v.map(enc).join('')}</data></array></value>`;
     if (typeof v === 'object') {
-      const members = Object.entries(v).map(([k,val]) => `<member><name>${k}</name>${encodeVal(val)}</member>`).join('');
-      return `<value><struct>${members}</struct></value>`;
+      const m = Object.entries(v).map(([k,val]) => `<member><name>${k}</name>${enc(val)}</member>`).join('');
+      return `<value><struct>${m}</struct></value>`;
     }
     return `<value><string>${v}</string></value>`;
   };
-  const paramXml = params.map(p => `<param>${encodeVal(p)}</param>`).join('');
-  return `<?xml version="1.0"?><methodCall><methodName>${method}</methodName><params>${paramXml}</params></methodCall>`;
+  return `<?xml version="1.0"?><methodCall><methodName>${method}</methodName><params>${params.map(p=>`<param>${enc(p)}</param>`).join('')}</params></methodCall>`;
 }
 
 function xmlDecode(text) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(text, 'text/xml');
+  const doc = new DOMParser().parseFromString(text, 'text/xml');
   const fault = doc.querySelector('fault');
-  if (fault) {
-    const msg = fault.querySelector('string')?.textContent || 'XML-RPC fout';
-    throw new Error(msg);
-  }
+  if (fault) throw new Error(fault.querySelector('string')?.textContent || 'XML-RPC fout');
   const param = doc.querySelector('params > param > value');
   if (!param) throw new Error('Geen resultaat van server');
-  return decodeValue(param.firstElementChild || param);
+  return decVal(param.firstElementChild || param);
 }
 
-function decodeValue(node) {
+function decVal(node) {
   if (!node) return null;
-  const tag = node.tagName;
-  if (tag === 'value') return decodeValue(node.firstElementChild || node);
-  if (tag === 'int' || tag === 'i4') return parseInt(node.textContent);
-  if (tag === 'double') return parseFloat(node.textContent);
-  if (tag === 'boolean') return node.textContent.trim() === '1';
-  if (tag === 'string' || tag === '#text') return node.textContent;
-  if (tag === 'nil') return null;
-  if (tag === 'array') {
-    return Array.from(node.querySelector('data').children).map(decodeValue);
-  }
-  if (tag === 'struct') {
-    const obj = {};
-    node.querySelectorAll(':scope > member').forEach(m => {
-      obj[m.querySelector('name').textContent] = decodeValue(m.querySelector('value'));
-    });
+  const t = node.tagName;
+  if (t==='value') return decVal(node.firstElementChild || node);
+  if (t==='int'||t==='i4') return parseInt(node.textContent);
+  if (t==='double') return parseFloat(node.textContent);
+  if (t==='boolean') return node.textContent.trim()==='1';
+  if (t==='string'||t==='#text') return node.textContent;
+  if (t==='nil') return null;
+  if (t==='array') return Array.from(node.querySelector('data').children).map(decVal);
+  if (t==='struct') {
+    const obj={};
+    node.querySelectorAll(':scope > member').forEach(m => { obj[m.querySelector('name').textContent]=decVal(m.querySelector('value')); });
     return obj;
   }
   return node.textContent;
 }
 
 async function login() {
-  const result = await xmlrpc('/xmlrpc/2/common', 'authenticate', [DB, USER, API_KEY, {}]);
-  if (!result || result === false) throw new Error('Inloggen mislukt – controleer gebruiker en API-sleutel');
-  return result;
+  const r = await xmlrpc('/xmlrpc/2/common','authenticate',[DB,USER,API_KEY,{}]);
+  if (!r || r===false) throw new Error('Inloggen mislukt');
+  return r;
 }
 
 async function searchRead(model, domain, fields) {
-  return await xmlrpc('/xmlrpc/2/object', 'execute_kw', [
-    DB, uid, API_KEY,
-    model, 'search_read',
-    [domain],
-    { fields, limit: 500 }
-  ]);
+  return await xmlrpc('/xmlrpc/2/object','execute_kw',[DB,uid,API_KEY,model,'search_read',[domain],{fields,limit:500}]);
 }
 
 async function geocode(query) {
-  if (!query || query.trim().length < 2) return null;
+  if (!query||query.trim().length<2) return null;
   try {
-    const p = new URLSearchParams({ q: query+', Belgium', format:'json', limit:'1', countrycodes:'be' });
-    const r = await fetch('https://nominatim.openstreetmap.org/search?'+p, { headers:{'Accept-Language':'nl'} });
+    const p = new URLSearchParams({q:query+', Belgium',format:'json',limit:'1',countrycodes:'be'});
+    const r = await fetch('https://nominatim.openstreetmap.org/search?'+p,{headers:{'Accept-Language':'nl'}});
     const d = await r.json();
     if (!d.length) return null;
-    return { lat: parseFloat(d[0].lat), lng: parseFloat(d[0].lon) };
+    return {lat:parseFloat(d[0].lat),lng:parseFloat(d[0].lon)};
   } catch { return null; }
 }
 
 function makeIcon() {
-  return L.divIcon({ className:'', html:'<div class="crm-pin"><div class="crm-pin-inner">★</div></div>', iconSize:[30,30], iconAnchor:[15,30], popupAnchor:[0,-32] });
+  return L.divIcon({className:'',html:'<div class="crm-pin"><div class="crm-pin-inner">★</div></div>',iconSize:[30,30],iconAnchor:[15,30],popupAnchor:[0,-32]});
 }
 
 function clearMarkers() { markers.forEach(m=>m.remove()); markers=[]; }
@@ -185,7 +171,7 @@ async function herlaad() {
   ['s-total','s-kaart','s-omzet'].forEach(id=>document.getElementById(id).textContent='–');
 
   try {
-    setMsg('Inloggen bij Odoo via XML-RPC...','');
+    setMsg('Inloggen bij Odoo...','');
     uid = await login();
 
     setMsg('Opportuniteiten ophalen...','');
@@ -198,35 +184,30 @@ async function herlaad() {
     document.getElementById('s-omzet').textContent = fmt(opps.reduce((s,o)=>s+(o.expected_revenue||0),0));
     hideLoading();
 
-    let geocoded = 0;
+    let geocoded=0;
     for (const opp of opps) {
       let city=opp.city||'', street=opp.street||'', zip=opp.zip||'';
-
-      if (!city && !zip && opp.partner_id) {
+      if (!city&&!zip&&opp.partner_id) {
         try {
-          const partners = await searchRead('res.partner',[['id','=',opp.partner_id[0]]],['city','street','zip']);
-          if (partners.length) { city=partners[0].city||''; street=partners[0].street||''; zip=partners[0].zip||''; }
+          const p = await searchRead('res.partner',[['id','=',opp.partner_id[0]]],['city','street','zip']);
+          if (p.length) { city=p[0].city||''; street=p[0].street||''; zip=p[0].zip||''; }
         } catch {}
         await sleep(100);
       }
-
-      const adres = [street,zip,city].filter(Boolean).join(', ');
-      const query = city || zip || adres;
+      const adres=[street,zip,city].filter(Boolean).join(', ');
+      const query=city||zip||adres;
       if (!query) continue;
-
-      const coords = await geocode(query);
+      const coords=await geocode(query);
       await sleep(350);
       if (!coords) continue;
-
       geocoded++;
-      document.getElementById('s-kaart').textContent = geocoded;
-
-      const m = L.marker([coords.lat,coords.lng],{icon:makeIcon()}).addTo(map);
-      const partnerNaam = Array.isArray(opp.partner_id) ? opp.partner_id[1] : '';
+      document.getElementById('s-kaart').textContent=geocoded;
+      const m=L.marker([coords.lat,coords.lng],{icon:makeIcon()}).addTo(map);
+      const pNaam=Array.isArray(opp.partner_id)?opp.partner_id[1]:'';
       m.bindPopup(`
         <div class="popup-header">${esc(opp.name)}</div>
         <div class="popup-body">
-          ${partnerNaam?`<div class="popup-row"><span class="popup-icon">🏢</span><span>${esc(partnerNaam)}</span></div>`:''}
+          ${pNaam?`<div class="popup-row"><span class="popup-icon">🏢</span><span>${esc(pNaam)}</span></div>`:''}
           <div class="popup-row"><span class="popup-icon">💶</span><span>Verwachte omzet: <strong>${fmt(opp.expected_revenue)}</strong></span></div>
           ${adres?`<div class="popup-row"><span class="popup-icon">📍</span><span>${esc(adres)}</span></div>`:''}
           <a class="popup-link" href="https://comtis-energy.odoo.com/odoo/crm/${opp.id}" target="_blank">→ Openen in Odoo</a>
@@ -235,40 +216,17 @@ async function herlaad() {
     }
   } catch(err) {
     hideLoading();
-    showError('Fout: ' + err.message);
+    showError('Fout: '+err.message);
     console.error(err);
   }
 }
 
 window.addEventListener('load', () => {
   map = L.map('map',{center:[50.5039,4.4699],zoom:8});
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
-    attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', maxZoom:18
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
+    attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
+    maxZoom:18
   }).addTo(map);
-
-  // Wit masker buiten België
-  fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries/BEL.geo.json')
-    .then(r => r.json())
-    .then(bel => {
-      const world = [[[-180,-90],[-180,90],[180,90],[180,-90],[-180,-90]]];
-      const belCoords = bel.geometry ? bel.geometry.coordinates : bel.features[0].geometry.coordinates;
-      const mask = { type:'Feature', geometry:{ type:'Polygon', coordinates: world[0].length ? [[-180,-90],[-180,90],[180,90],[180,-90],[-180,-90]] : [] } };
-      // Overlay: grote witte rechthoek, dan België uitknippen
-      L.geoJSON({
-        type: 'Feature',
-        geometry: {
-          type: 'MultiPolygon',
-          coordinates: [[
-            [[-180,-90],[-180,90],[180,90],[180,-90],[-180,-90]],
-            ...belCoords
-          ]]
-        }
-      }, {
-        style: { fillColor:'#0d0d1a', fillOpacity:0.85, color:'#a07abf', weight:2, opacity:1 }
-      }).addTo(map);
-    })
-    .catch(e => console.warn('Masker laden mislukt:', e));
-
   herlaad();
 });
 </script>
