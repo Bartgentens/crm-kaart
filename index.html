@@ -242,7 +242,7 @@ async function herlaad() {
 
 window.addEventListener('load', () => {
   map = L.map('map',{center:[50.5039,4.4699],zoom:8});
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
     attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', maxZoom:18
   }).addTo(map);
   herlaad();
