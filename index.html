@@ -7,8 +7,8 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet-src.js"></script>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; height: 100vh; display: flex; flex-direction: column; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:#f0f2f5; height:100vh; display:flex; flex-direction:column; }
   header { background:#fff; border-bottom:1px solid #e0e0e0; padding:12px 20px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
   .header-left { display:flex; align-items:center; gap:12px; }
   .logo { width:32px; height:32px; background:linear-gradient(135deg,#875A7B,#6B4668); border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px; }
@@ -25,7 +25,7 @@
   @keyframes spin { to { transform:rotate(360deg); } }
   #loading p { font-size:14px; color:#555; }
   #loading small { font-size:12px; color:#aaa; }
-  #error-box { display:none; position:fixed; top:80px; left:50%; transform:translateX(-50%); background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:12px 20px; font-size:13px; color:#856404; z-index:1000; max-width:520px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+  #error-box { display:none; position:fixed; top:80px; left:50%; transform:translateX(-50%); background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:12px 20px; font-size:13px; color:#856404; z-index:1000; max-width:560px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
   .crm-pin { width:30px; height:30px; background:#875A7B; border:2px solid #fff; border-radius:50% 50% 50% 0; transform:rotate(-45deg); box-shadow:0 2px 6px rgba(0,0,0,0.25); cursor:pointer; }
   .crm-pin-inner { transform:rotate(45deg); width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; font-weight:700; }
   .leaflet-popup-content-wrapper { border-radius:10px; padding:0; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,0.15); }
@@ -33,9 +33,8 @@
   .popup-header { background:#875A7B; color:#fff; padding:10px 14px; font-size:13px; font-weight:600; }
   .popup-body { padding:10px 14px; }
   .popup-row { display:flex; gap:8px; align-items:flex-start; font-size:12px; color:#444; margin-top:5px; }
-  .popup-row:first-child { margin-top:0; }
   .popup-icon { color:#875A7B; flex-shrink:0; width:14px; margin-top:1px; }
-  .popup-link { display:inline-block; margin-top:8px; font-size:12px; color:#875A7B; text-decoration:underline; cursor:pointer; }
+  .popup-link { display:inline-block; margin-top:8px; font-size:12px; color:#875A7B; text-decoration:underline; }
   footer { background:#fff; border-top:1px solid #e0e0e0; padding:6px 20px; font-size:11px; color:#aaa; text-align:center; flex-shrink:0; }
 </style>
 </head>
@@ -69,62 +68,105 @@
 <footer>Kaartdata: OpenStreetMap · Geocoding: Nominatim · Data: Odoo CRM ComTIS Energy</footer>
 
 <script>
-const PROXY     = 'https://odoo-proxy.bartgentens.workers.dev';
-const ODOO_DB   = 'comtis-energy';
-const ODOO_USER = 'bart.gentens@comtis.be';
-const ODOO_KEY  = '3204680a1e7793afc0d459e63ae899109887ee86';
+const PROXY   = 'https://odoo-proxy.bartgentens.workers.dev';
+const DB      = 'comtis-energy';
+const USER    = 'bart.gentens@comtis.be';
+const API_KEY = '3204680a1e7793afc0d459e63ae899109887ee86';
 
 let map, markers = [], uid = null;
 
-function fmt(val) {
-  return new Intl.NumberFormat('nl-BE', { style:'currency', currency:'EUR', maximumFractionDigits:0 }).format(val||0);
-}
-function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function setMsg(msg, detail) {
-  document.getElementById('loading-msg').textContent = msg;
-  document.getElementById('loading-detail').textContent = detail || '';
-}
-function hideLoading() { document.getElementById('loading').style.display = 'none'; }
-function showError(msg) {
-  const el = document.getElementById('error-box');
-  el.textContent = msg; el.style.display = 'block';
-  setTimeout(() => el.style.display = 'none', 10000);
-}
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function fmt(v) { return new Intl.NumberFormat('nl-BE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(v||0); }
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function setMsg(m,d) { document.getElementById('loading-msg').textContent=m; document.getElementById('loading-detail').textContent=d||''; }
+function hideLoading() { document.getElementById('loading').style.display='none'; }
+function showError(m) { const e=document.getElementById('error-box'); e.textContent=m; e.style.display='block'; setTimeout(()=>e.style.display='none',12000); }
+function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
 
-async function rpc(path, params) {
+// XML-RPC via Cloudflare Worker
+async function xmlrpc(path, methodName, params) {
+  const body = xmlEncode(methodName, params);
   const resp = await fetch(PROXY + path, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ jsonrpc:'2.0', method:'call', id:1, params })
+    headers: { 'Content-Type': 'text/xml' },
+    body
   });
-  if (!resp.ok) throw new Error('HTTP ' + resp.status);
-  const data = await resp.json();
-  if (data.error) throw new Error(data.error.data?.message || data.error.message);
-  return data.result;
+  const text = await resp.text();
+  return xmlDecode(text);
+}
+
+function xmlEncode(method, params) {
+  const encodeVal = v => {
+    if (v === null || v === false) return '<value><boolean>0</boolean></value>';
+    if (v === true) return '<value><boolean>1</boolean></value>';
+    if (typeof v === 'number' && Number.isInteger(v)) return `<value><int>${v}</int></value>`;
+    if (typeof v === 'number') return `<value><double>${v}</double></value>`;
+    if (typeof v === 'string') return `<value><string>${v.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</string></value>`;
+    if (Array.isArray(v)) return `<value><array><data>${v.map(encodeVal).join('')}</data></array></value>`;
+    if (typeof v === 'object') {
+      const members = Object.entries(v).map(([k,val]) => `<member><name>${k}</name>${encodeVal(val)}</member>`).join('');
+      return `<value><struct>${members}</struct></value>`;
+    }
+    return `<value><string>${v}</string></value>`;
+  };
+  const paramXml = params.map(p => `<param>${encodeVal(p)}</param>`).join('');
+  return `<?xml version="1.0"?><methodCall><methodName>${method}</methodName><params>${paramXml}</params></methodCall>`;
+}
+
+function xmlDecode(text) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(text, 'text/xml');
+  const fault = doc.querySelector('fault');
+  if (fault) {
+    const msg = fault.querySelector('string')?.textContent || 'XML-RPC fout';
+    throw new Error(msg);
+  }
+  const param = doc.querySelector('params > param > value');
+  if (!param) throw new Error('Geen resultaat van server');
+  return decodeValue(param.firstElementChild || param);
+}
+
+function decodeValue(node) {
+  if (!node) return null;
+  const tag = node.tagName;
+  if (tag === 'value') return decodeValue(node.firstElementChild || node);
+  if (tag === 'int' || tag === 'i4') return parseInt(node.textContent);
+  if (tag === 'double') return parseFloat(node.textContent);
+  if (tag === 'boolean') return node.textContent.trim() === '1';
+  if (tag === 'string' || tag === '#text') return node.textContent;
+  if (tag === 'nil') return null;
+  if (tag === 'array') {
+    return Array.from(node.querySelector('data').children).map(decodeValue);
+  }
+  if (tag === 'struct') {
+    const obj = {};
+    node.querySelectorAll(':scope > member').forEach(m => {
+      obj[m.querySelector('name').textContent] = decodeValue(m.querySelector('value'));
+    });
+    return obj;
+  }
+  return node.textContent;
 }
 
 async function login() {
-  const result = await rpc('/web/session/authenticate', {
-    db: ODOO_DB, login: ODOO_USER, password: ODOO_KEY
-  });
-  if (!result?.uid) throw new Error('Inloggen mislukt – controleer API-sleutel');
-  return result.uid;
+  const result = await xmlrpc('/xmlrpc/2/common', 'authenticate', [DB, USER, API_KEY, {}]);
+  if (!result || result === false) throw new Error('Inloggen mislukt – controleer gebruiker en API-sleutel');
+  return result;
 }
 
 async function searchRead(model, domain, fields) {
-  return await rpc('/web/dataset/call_kw', {
-    model, method: 'search_read',
-    args: [domain],
-    kwargs: { fields, limit: 500, context: { uid } }
-  });
+  return await xmlrpc('/xmlrpc/2/object', 'execute_kw', [
+    DB, uid, API_KEY,
+    model, 'search_read',
+    [domain],
+    { fields, limit: 500 }
+  ]);
 }
 
 async function geocode(query) {
   if (!query || query.trim().length < 2) return null;
   try {
-    const params = new URLSearchParams({ q: query + ', Belgium', format:'json', limit:'1', countrycodes:'be' });
-    const r = await fetch('https://nominatim.openstreetmap.org/search?' + params, { headers:{ 'Accept-Language':'nl' } });
+    const p = new URLSearchParams({ q: query+', Belgium', format:'json', limit:'1', countrycodes:'be' });
+    const r = await fetch('https://nominatim.openstreetmap.org/search?'+p, { headers:{'Accept-Language':'nl'} });
     const d = await r.json();
     if (!d.length) return null;
     return { lat: parseFloat(d[0].lat), lng: parseFloat(d[0].lon) };
@@ -132,51 +174,43 @@ async function geocode(query) {
 }
 
 function makeIcon() {
-  return L.divIcon({
-    className: '',
-    html: `<div class="crm-pin"><div class="crm-pin-inner">★</div></div>`,
-    iconSize: [30,30], iconAnchor: [15,30], popupAnchor: [0,-32]
-  });
+  return L.divIcon({ className:'', html:'<div class="crm-pin"><div class="crm-pin-inner">★</div></div>', iconSize:[30,30], iconAnchor:[15,30], popupAnchor:[0,-32] });
 }
 
-function clearMarkers() { markers.forEach(m => m.remove()); markers = []; }
+function clearMarkers() { markers.forEach(m=>m.remove()); markers=[]; }
 
 async function herlaad() {
   clearMarkers();
-  document.getElementById('loading').style.display = 'flex';
-  document.getElementById('s-total').textContent = '–';
-  document.getElementById('s-kaart').textContent = '–';
-  document.getElementById('s-omzet').textContent = '–';
+  document.getElementById('loading').style.display='flex';
+  ['s-total','s-kaart','s-omzet'].forEach(id=>document.getElementById(id).textContent='–');
 
   try {
-    setMsg('Inloggen bij Odoo...', '');
+    setMsg('Inloggen bij Odoo via XML-RPC...','');
     uid = await login();
 
-    setMsg('Opportuniteiten ophalen...', '');
-    const opps = await searchRead(
-      'crm.lead',
+    setMsg('Opportuniteiten ophalen...','');
+    const opps = await searchRead('crm.lead',
       [['active','=',true],['type','=','opportunity']],
-      ['id','name','partner_id','expected_revenue','stage_id','city','street','zip']
+      ['id','name','partner_id','expected_revenue','city','street','zip']
     );
 
     document.getElementById('s-total').textContent = opps.length;
-    document.getElementById('s-omzet').textContent = fmt(opps.reduce((s,o) => s+(o.expected_revenue||0), 0));
+    document.getElementById('s-omzet').textContent = fmt(opps.reduce((s,o)=>s+(o.expected_revenue||0),0));
     hideLoading();
 
     let geocoded = 0;
-    for (let i = 0; i < opps.length; i++) {
-      const opp = opps[i];
-      let city = opp.city || '', street = opp.street || '', zip = opp.zip || '';
+    for (const opp of opps) {
+      let city=opp.city||'', street=opp.street||'', zip=opp.zip||'';
 
       if (!city && !zip && opp.partner_id) {
         try {
-          const partners = await searchRead('res.partner', [['id','=',opp.partner_id[0]]], ['city','street','zip']);
-          if (partners.length) { city = partners[0].city||''; street = partners[0].street||''; zip = partners[0].zip||''; }
+          const partners = await searchRead('res.partner',[['id','=',opp.partner_id[0]]],['city','street','zip']);
+          if (partners.length) { city=partners[0].city||''; street=partners[0].street||''; zip=partners[0].zip||''; }
         } catch {}
         await sleep(100);
       }
 
-      const adres = [street, zip, city].filter(Boolean).join(', ');
+      const adres = [street,zip,city].filter(Boolean).join(', ');
       const query = city || zip || adres;
       if (!query) continue;
 
@@ -187,13 +221,14 @@ async function herlaad() {
       geocoded++;
       document.getElementById('s-kaart').textContent = geocoded;
 
-      const m = L.marker([coords.lat, coords.lng], { icon: makeIcon() }).addTo(map);
+      const m = L.marker([coords.lat,coords.lng],{icon:makeIcon()}).addTo(map);
+      const partnerNaam = Array.isArray(opp.partner_id) ? opp.partner_id[1] : '';
       m.bindPopup(`
         <div class="popup-header">${esc(opp.name)}</div>
         <div class="popup-body">
-          ${opp.partner_id ? `<div class="popup-row"><span class="popup-icon">🏢</span><span>${esc(opp.partner_id[1])}</span></div>` : ''}
+          ${partnerNaam?`<div class="popup-row"><span class="popup-icon">🏢</span><span>${esc(partnerNaam)}</span></div>`:''}
           <div class="popup-row"><span class="popup-icon">💶</span><span>Verwachte omzet: <strong>${fmt(opp.expected_revenue)}</strong></span></div>
-          ${adres ? `<div class="popup-row"><span class="popup-icon">📍</span><span>${esc(adres)}</span></div>` : ''}
+          ${adres?`<div class="popup-row"><span class="popup-icon">📍</span><span>${esc(adres)}</span></div>`:''}
           <a class="popup-link" href="https://comtis-energy.odoo.com/odoo/crm/${opp.id}" target="_blank">→ Openen in Odoo</a>
         </div>`);
       markers.push(m);
@@ -205,11 +240,10 @@ async function herlaad() {
   }
 }
 
-window.addEventListener('load', function() {
-  map = L.map('map', { center:[50.5039,4.4699], zoom:8 });
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    maxZoom: 18
+window.addEventListener('load', () => {
+  map = L.map('map',{center:[50.5039,4.4699],zoom:8});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', maxZoom:18
   }).addTo(map);
   herlaad();
 });
