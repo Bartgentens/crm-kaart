@@ -9,118 +9,43 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; height: 100vh; display: flex; flex-direction: column; }
-
-  header {
-    background: #fff;
-    border-bottom: 1px solid #e0e0e0;
-    padding: 12px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-  }
-  .header-left { display: flex; align-items: center; gap: 12px; }
-  .logo { width: 32px; height: 32px; background: linear-gradient(135deg, #875A7B, #6B4668); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 14px; }
-  header h1 { font-size: 16px; font-weight: 600; color: #1a1a2e; }
-  header p { font-size: 12px; color: #888; margin-top: 1px; }
-
-  #stats-bar {
-    display: flex;
-    gap: 0;
-    background: #fff;
-    border-bottom: 1px solid #e0e0e0;
-    flex-shrink: 0;
-  }
-  .stat {
-    flex: 1;
-    padding: 8px 16px;
-    text-align: center;
-    border-right: 1px solid #e0e0e0;
-  }
-  .stat:last-child { border-right: none; }
-  .stat-val { font-size: 20px; font-weight: 700; color: #875A7B; line-height: 1.2; }
-  .stat-lbl { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.4px; }
-
-  #map { flex: 1; min-height: 0; }
-
-  #loading {
-    position: fixed; inset: 0;
-    background: rgba(255,255,255,0.92);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    z-index: 9999;
-    gap: 16px;
-  }
-  .spinner {
-    width: 40px; height: 40px;
-    border: 3px solid #e0d0e8;
-    border-top-color: #875A7B;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  #loading p { font-size: 14px; color: #555; }
-  #loading small { font-size: 12px; color: #aaa; }
-
-  #error-box {
-    display: none;
-    position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
-    background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px;
-    padding: 12px 20px; font-size: 13px; color: #856404;
-    z-index: 1000; max-width: 480px; text-align: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  }
-
-  /* Custom pin */
-  .crm-pin {
-    width: 30px; height: 30px;
-    background: #875A7B;
-    border: 2px solid #fff;
-    border-radius: 50% 50% 50% 0;
-    transform: rotate(-45deg);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  .crm-pin:hover { background: #6B4668; }
-  .crm-pin-inner {
-    transform: rotate(45deg);
-    width: 100%; height: 100%;
-    display: flex; align-items: center; justify-content: center;
-    color: #fff; font-size: 11px; font-weight: 700;
-  }
-
-  /* Leaflet popup */
-  .leaflet-popup-content-wrapper { border-radius: 10px; padding: 0; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
-  .leaflet-popup-content { margin: 0; min-width: 230px; }
-  .popup-header { background: #875A7B; color: #fff; padding: 10px 14px; font-size: 13px; font-weight: 600; }
-  .popup-body { padding: 10px 14px; }
-  .popup-row { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; color: #444; margin-top: 5px; }
-  .popup-row:first-child { margin-top: 0; }
-  .popup-icon { color: #875A7B; flex-shrink: 0; width: 14px; margin-top: 1px; }
-  .popup-link { display: inline-block; margin-top: 8px; font-size: 12px; color: #875A7B; text-decoration: underline; cursor: pointer; }
-  .popup-link:hover { color: #6B4668; }
-
-  footer {
-    background: #fff;
-    border-top: 1px solid #e0e0e0;
-    padding: 6px 20px;
-    font-size: 11px;
-    color: #aaa;
-    text-align: center;
-    flex-shrink: 0;
-  }
+  header { background:#fff; border-bottom:1px solid #e0e0e0; padding:12px 20px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
+  .header-left { display:flex; align-items:center; gap:12px; }
+  .logo { width:32px; height:32px; background:linear-gradient(135deg,#875A7B,#6B4668); border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px; }
+  header h1 { font-size:16px; font-weight:600; color:#1a1a2e; }
+  header p { font-size:12px; color:#888; margin-top:1px; }
+  #stats-bar { display:flex; background:#fff; border-bottom:1px solid #e0e0e0; flex-shrink:0; }
+  .stat { flex:1; padding:8px 16px; text-align:center; border-right:1px solid #e0e0e0; }
+  .stat:last-child { border-right:none; }
+  .stat-val { font-size:20px; font-weight:700; color:#875A7B; line-height:1.2; }
+  .stat-lbl { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.4px; }
+  #map { flex:1; min-height:0; }
+  #loading { position:fixed; inset:0; background:rgba(255,255,255,0.92); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:9999; gap:16px; }
+  .spinner { width:40px; height:40px; border:3px solid #e0d0e8; border-top-color:#875A7B; border-radius:50%; animation:spin 0.8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  #loading p { font-size:14px; color:#555; }
+  #loading small { font-size:12px; color:#aaa; }
+  #error-box { display:none; position:fixed; top:80px; left:50%; transform:translateX(-50%); background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:12px 20px; font-size:13px; color:#856404; z-index:1000; max-width:520px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+  .crm-pin { width:30px; height:30px; background:#875A7B; border:2px solid #fff; border-radius:50% 50% 50% 0; transform:rotate(-45deg); box-shadow:0 2px 6px rgba(0,0,0,0.25); cursor:pointer; }
+  .crm-pin-inner { transform:rotate(45deg); width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; font-weight:700; }
+  .leaflet-popup-content-wrapper { border-radius:10px; padding:0; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,0.15); }
+  .leaflet-popup-content { margin:0; min-width:230px; }
+  .popup-header { background:#875A7B; color:#fff; padding:10px 14px; font-size:13px; font-weight:600; }
+  .popup-body { padding:10px 14px; }
+  .popup-row { display:flex; gap:8px; align-items:flex-start; font-size:12px; color:#444; margin-top:5px; }
+  .popup-row:first-child { margin-top:0; }
+  .popup-icon { color:#875A7B; flex-shrink:0; width:14px; margin-top:1px; }
+  .popup-link { display:inline-block; margin-top:8px; font-size:12px; color:#875A7B; text-decoration:underline; cursor:pointer; }
+  footer { background:#fff; border-top:1px solid #e0e0e0; padding:6px 20px; font-size:11px; color:#aaa; text-align:center; flex-shrink:0; }
 </style>
 </head>
 <body>
 
 <div id="loading">
   <div class="spinner"></div>
-  <p>Opportuniteiten laden...</p>
-  <small id="loading-detail">Verbinding maken met Odoo...</small>
+  <p id="loading-msg">Verbinding maken met Odoo...</p>
+  <small id="loading-detail"></small>
 </div>
-
 <div id="error-box"></div>
 
 <header>
@@ -131,9 +56,7 @@
       <p>ComTIS Energy – Opportuniteiten</p>
     </div>
   </div>
-  <button onclick="herlaad()" style="background:#875A7B;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:13px;cursor:pointer;">
-    ↻ Vernieuwen
-  </button>
+  <button onclick="herlaad()" style="background:#875A7B;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:13px;cursor:pointer;">↻ Vernieuwen</button>
 </header>
 
 <div id="stats-bar">
@@ -143,199 +66,153 @@
 </div>
 
 <div id="map"></div>
-
 <footer>Kaartdata: OpenStreetMap · Geocoding: Nominatim · Data: Odoo CRM ComTIS Energy</footer>
 
 <script>
-const ODOO_URL  = 'https://odoo-proxy.bartgentens.workers.dev';
+const PROXY     = 'https://odoo-proxy.bartgentens.workers.dev';
 const ODOO_DB   = 'comtis-energy';
 const ODOO_USER = 'bart.gentens@comtis.be';
 const ODOO_KEY  = '3204680a1e7793afc0d459e63ae899109887ee86';
 
-let map;
-
-window.addEventListener('load', function() {
-  map = L.map('map', { center: [50.5039, 4.4699], zoom: 8 });
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    maxZoom: 18
-  }).addTo(map);
-  herlaad();
-});
-
-let markers = [];
+let map, markers = [], uid = null;
 
 function fmt(val) {
-  return new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(val || 0);
+  return new Intl.NumberFormat('nl-BE', { style:'currency', currency:'EUR', maximumFractionDigits:0 }).format(val||0);
 }
-
-function setLoading(msg, detail) {
-  document.getElementById('loading').style.display = 'flex';
-  if (detail) document.getElementById('loading-detail').textContent = detail;
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function setMsg(msg, detail) {
+  document.getElementById('loading-msg').textContent = msg;
+  document.getElementById('loading-detail').textContent = detail || '';
 }
-function hideLoading() {
-  document.getElementById('loading').style.display = 'none';
-}
+function hideLoading() { document.getElementById('loading').style.display = 'none'; }
 function showError(msg) {
   const el = document.getElementById('error-box');
-  el.textContent = msg;
-  el.style.display = 'block';
-  setTimeout(() => el.style.display = 'none', 8000);
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 10000);
 }
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-async function odooCall(model, method, args, kwargs) {
-  const resp = await fetch(`${ODOO_URL}/web/dataset/call_kw`, {
+async function rpc(path, params) {
+  const resp = await fetch(PROXY + path, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      jsonrpc: '2.0', method: 'call', id: 1,
-      params: {
-        model, method,
-        args: args || [],
-        kwargs: {
-          context: {},
-          ...kwargs
-        }
-      }
-    }),
-    credentials: 'omit'
+    body: JSON.stringify({ jsonrpc:'2.0', method:'call', id:1, params })
   });
+  if (!resp.ok) throw new Error('HTTP ' + resp.status);
   const data = await resp.json();
   if (data.error) throw new Error(data.error.data?.message || data.error.message);
   return data.result;
 }
 
 async function login() {
-  const resp = await fetch(`${ODOO_URL}/web/session/authenticate`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      jsonrpc: '2.0', method: 'call', id: 1,
-      params: { db: ODOO_DB, login: ODOO_USER, password: ODOO_KEY }
-    }),
-    credentials: 'omit'
+  const result = await rpc('/web/session/authenticate', {
+    db: ODOO_DB, login: ODOO_USER, password: ODOO_KEY
   });
-  const data = await resp.json();
-  if (!data.result?.uid) throw new Error('Inloggen mislukt. Controleer je API-sleutel.');
-  return data.result.uid;
+  if (!result?.uid) throw new Error('Inloggen mislukt – controleer API-sleutel');
+  return result.uid;
+}
+
+async function searchRead(model, domain, fields) {
+  return await rpc('/web/dataset/call_kw', {
+    model, method: 'search_read',
+    args: [domain],
+    kwargs: { fields, limit: 500, context: { uid } }
+  });
 }
 
 async function geocode(query) {
   if (!query || query.trim().length < 2) return null;
   try {
-    const params = new URLSearchParams({ q: query + ', Belgium', format: 'json', limit: '1', countrycodes: 'be' });
-    const r = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
-      headers: { 'Accept-Language': 'nl' }
-    });
+    const params = new URLSearchParams({ q: query + ', Belgium', format:'json', limit:'1', countrycodes:'be' });
+    const r = await fetch('https://nominatim.openstreetmap.org/search?' + params, { headers:{ 'Accept-Language':'nl' } });
     const d = await r.json();
     if (!d.length) return null;
     return { lat: parseFloat(d[0].lat), lng: parseFloat(d[0].lon) };
   } catch { return null; }
 }
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-function clearMarkers() {
-  markers.forEach(m => m.remove());
-  markers = [];
-}
-
-function makePin() {
+function makeIcon() {
   return L.divIcon({
     className: '',
     html: `<div class="crm-pin"><div class="crm-pin-inner">★</div></div>`,
-    iconSize: [30, 30],
-    iconAnchor: [15, 30],
-    popupAnchor: [0, -32]
+    iconSize: [30,30], iconAnchor: [15,30], popupAnchor: [0,-32]
   });
 }
 
+function clearMarkers() { markers.forEach(m => m.remove()); markers = []; }
+
 async function herlaad() {
   clearMarkers();
-  setLoading('Verbinden met Odoo...', 'Verbinding maken met Odoo...');
+  document.getElementById('loading').style.display = 'flex';
+  document.getElementById('s-total').textContent = '–';
+  document.getElementById('s-kaart').textContent = '–';
+  document.getElementById('s-omzet').textContent = '–';
 
   try {
-    await login();
+    setMsg('Inloggen bij Odoo...', '');
+    uid = await login();
 
-    document.getElementById('loading-detail').textContent = 'Opportuniteiten ophalen...';
-
-    const opps = await odooCall('crm.lead', 'search_read',
-      [[['active', '=', true], ['type', '=', 'opportunity']]],
-      {
-        fields: ['id', 'name', 'partner_id', 'expected_revenue', 'stage_id', 'city', 'street', 'zip'],
-        limit: 300
-      }
+    setMsg('Opportuniteiten ophalen...', '');
+    const opps = await searchRead(
+      'crm.lead',
+      [['active','=',true],['type','=','opportunity']],
+      ['id','name','partner_id','expected_revenue','stage_id','city','street','zip']
     );
 
     document.getElementById('s-total').textContent = opps.length;
-    const totalRev = opps.reduce((s, o) => s + (o.expected_revenue || 0), 0);
-    document.getElementById('s-omzet').textContent = fmt(totalRev);
-
+    document.getElementById('s-omzet').textContent = fmt(opps.reduce((s,o) => s+(o.expected_revenue||0), 0));
     hideLoading();
 
     let geocoded = 0;
     for (let i = 0; i < opps.length; i++) {
       const opp = opps[i];
+      let city = opp.city || '', street = opp.street || '', zip = opp.zip || '';
 
-      // Haal partner-adres op als opportuniteit zelf geen stad heeft
-      let city = opp.city || '';
-      let street = opp.street || '';
-      let zip = opp.zip || '';
-
-      if (!city && opp.partner_id) {
+      if (!city && !zip && opp.partner_id) {
         try {
-          const partner = await odooCall('res.partner', 'read',
-            [[opp.partner_id[0]]],
-            { fields: ['city', 'street', 'zip'] }
-          );
-          if (partner.length) {
-            city  = partner[0].city  || '';
-            street= partner[0].street|| '';
-            zip   = partner[0].zip   || '';
-          }
+          const partners = await searchRead('res.partner', [['id','=',opp.partner_id[0]]], ['city','street','zip']);
+          if (partners.length) { city = partners[0].city||''; street = partners[0].street||''; zip = partners[0].zip||''; }
         } catch {}
         await sleep(100);
       }
 
-      const adresDisplay = [street, zip, city].filter(Boolean).join(', ');
-      const geocodeQuery = city || zip || adresDisplay;
-      if (!geocodeQuery) continue;
+      const adres = [street, zip, city].filter(Boolean).join(', ');
+      const query = city || zip || adres;
+      if (!query) continue;
 
-      const coords = await geocode(geocodeQuery);
+      const coords = await geocode(query);
       await sleep(350);
       if (!coords) continue;
 
       geocoded++;
       document.getElementById('s-kaart').textContent = geocoded;
 
-      const marker = L.marker([coords.lat, coords.lng], { icon: makePin() }).addTo(map);
-
-      const partnerNaam = opp.partner_id ? opp.partner_id[1] : '';
-      const stage = opp.stage_id ? opp.stage_id[1] : '';
-
-      marker.bindPopup(`
-        <div class="popup-header">
-          ${opp.name.replace(/</g,'&lt;')}
-        </div>
+      const m = L.marker([coords.lat, coords.lng], { icon: makeIcon() }).addTo(map);
+      m.bindPopup(`
+        <div class="popup-header">${esc(opp.name)}</div>
         <div class="popup-body">
-          ${partnerNaam ? `<div class="popup-row"><span class="popup-icon">🏢</span><span>${partnerNaam.replace(/</g,'&lt;')}</span></div>` : ''}
+          ${opp.partner_id ? `<div class="popup-row"><span class="popup-icon">🏢</span><span>${esc(opp.partner_id[1])}</span></div>` : ''}
           <div class="popup-row"><span class="popup-icon">💶</span><span>Verwachte omzet: <strong>${fmt(opp.expected_revenue)}</strong></span></div>
-          ${adresDisplay ? `<div class="popup-row"><span class="popup-icon">📍</span><span>${adresDisplay.replace(/</g,'&lt;')}</span></div>` : ''}
+          ${adres ? `<div class="popup-row"><span class="popup-icon">📍</span><span>${esc(adres)}</span></div>` : ''}
           <a class="popup-link" href="https://comtis-energy.odoo.com/odoo/crm/${opp.id}" target="_blank">→ Openen in Odoo</a>
-        </div>
-      `);
-
-      markers.push(marker);
+        </div>`);
+      markers.push(m);
     }
-
-  } catch (err) {
+  } catch(err) {
     hideLoading();
     showError('Fout: ' + err.message);
     console.error(err);
   }
 }
 
-herlaad();
+window.addEventListener('load', function() {
+  map = L.map('map', { center:[50.5039,4.4699], zoom:8 });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 18
+  }).addTo(map);
+  herlaad();
+});
 </script>
 </body>
 </html>
