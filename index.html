@@ -147,7 +147,7 @@
 <footer>Kaartdata: OpenStreetMap · Geocoding: Nominatim · Data: Odoo CRM ComTIS Energy</footer>
 
 <script>
-const ODOO_URL  = 'https://comtis-energy.odoo.com';
+const ODOO_URL  = 'https://odoo-proxy.bartgentens.workers.dev';
 const ODOO_DB   = 'comtis-energy';
 const ODOO_USER = 'bart.gentens@comtis.be';
 const ODOO_KEY  = '3204680a1e7793afc0d459e63ae899109887ee86';
@@ -321,7 +321,7 @@ async function herlaad() {
           ${partnerNaam ? `<div class="popup-row"><span class="popup-icon">🏢</span><span>${partnerNaam.replace(/</g,'&lt;')}</span></div>` : ''}
           <div class="popup-row"><span class="popup-icon">💶</span><span>Verwachte omzet: <strong>${fmt(opp.expected_revenue)}</strong></span></div>
           ${adresDisplay ? `<div class="popup-row"><span class="popup-icon">📍</span><span>${adresDisplay.replace(/</g,'&lt;')}</span></div>` : ''}
-          <a class="popup-link" href="${ODOO_URL}/odoo/crm/${opp.id}" target="_blank">→ Openen in Odoo</a>
+          <a class="popup-link" href="https://comtis-energy.odoo.com/odoo/crm/${opp.id}" target="_blank">→ Openen in Odoo</a>
         </div>
       `);
 
